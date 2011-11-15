@@ -27,7 +27,6 @@ def do_alphabet():
         g = randint(0,15)
         b = randint(0,15)
         leds.set_ascii(letter, (1,1), (r,g,b))
-        time.sleep(0.05)
         continue
     return
     
@@ -42,14 +41,14 @@ def do_pattern():
         leds.set_color((n,n,n));
 
     leds.set_clear();
-    time.sleep(0.1)
 
     for row in range(8):
         for col in range(8):
             
             r = 2*col+1
             g = 2*row+1
-            b = randint(0,15)
+            #b = randint(0,15)
+            b = 1
 
             leds.set_pixel((col,row), (r,g,b))
 
@@ -57,6 +56,6 @@ def do_pattern():
         continue
     return
         
-#do_alphabet()
+do_alphabet()
 do_pattern()
 

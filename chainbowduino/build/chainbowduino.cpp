@@ -1,13 +1,30 @@
-#include "comm.h"
-#include "Rainbow.h"
-#include <Wire.h>
-#include <EEPROM.h>
+#include <WProgram.h>
 
+int main(void)
+{
+	init();
+
+	setup();
+    
+	for (;;)
+		loop();
+        
+	return 0;
+}
+
+void loop ();
+void setup ();
+#line 1 "build/chainbowduino.pde"
 /* -*- c++ -*-
 
    This is firmware for rainbowduinos that are chained together.
 
 */
+
+#include "comm.h"
+#include "Rainbow.h"
+#include <Wire.h>
+#include <EEPROM.h>
 
 
 Comm comm = Comm();
@@ -24,11 +41,7 @@ unsigned short get_short()
 bool handle_packet(int nbytes)
 {
     unsigned char cmd = comm.read();
-    Serial.print("Handling ");
-    Serial.print(nbytes);
-    Serial.print(" bytes with command ");
-    Serial.println(cmd);
-
+    
     unsigned short color;
     unsigned short eight[8];
     unsigned short matrix[8][8];
@@ -94,9 +107,6 @@ bool handle_packet(int nbytes)
         break;
 
     default:
-        Serial.print("Unknown command: ");
-        Serial.println(cmd);
-        //comm.drain(nbytes-1);
         return false;
         break;
     }

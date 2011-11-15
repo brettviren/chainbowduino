@@ -4,8 +4,18 @@
 /*
  * Communication protocol:
  *
- * Packet: [address][count][payload of count bytes][\0]
+ * Send to me:
+ *
+ * Packet: [address][return][count][payload of count bytes][\0]
  * Payload: [command][command specific options]
+ *
+ * If okay, I send to you:
+ *
+ * OK[return]
+ *
+ * If not, I send to you
+ *
+ * NO[return]
  */
 
 #define BAUDRATE 9600
@@ -67,25 +77,14 @@ byte Comm::read()
 
 bool Comm::drain(int nbytes)
 {
-    Serial.print("Draining ");
-    Serial.print(nbytes);
-    Serial.println(" bytes.");
-
     while (nbytes) {
         --nbytes;
         byte val = read();
-        //Serial.print((int)val);
     }
 }
 
-void Comm::transmit(int addr, int nbytes)
+bool Comm::transmit(int addr, int nbytes)
 {
-    Serial.print("transmitting ");
-    Serial.print(nbytes);
-    Serial.print(" to address ");
-    Serial.print(addr);
-    Serial.println(".");
-
     m_master.beginTransmission(addr);
     while (nbytes) {
         --nbytes;
@@ -93,6 +92,7 @@ void Comm::transmit(int addr, int nbytes)
         m_master.send(val);
     }
     m_master.endTransmission();
+    return true;
 }
 
 
@@ -103,28 +103,33 @@ void Comm::process()
     }
 
     byte addr = serial_get();
+    byte ret = serial_get();
     byte num = serial_get();
 
-    Serial.print("Got packet for address ");
-    Serial.print((int)addr);        
-    Serial.print(" with nbytes=");
-    Serial.print((int)num);        
-    Serial.println(".");
-
+    bool okay = false;
     if (addr == m_addr) {
         if (m_handler) {
             m_gotSerial = true;
-            m_handler(num);
+            okay = m_handler(num);
             serial_drain();
             m_gotSerial = false;
         }
         else {
-            drain(num);
+            okay = drain(num);
         }
     }
     else {
-        transmit(addr,num);
+        okay = transmit(addr,num);
     }
+
+    if (okay) {
+        Serial.print("OK");
+    }
+    else {
+        Serial.print("NO");
+    }
+    Serial.print(ret);
+
 }
 
 void Comm::set_handler(PacketHandler handler)

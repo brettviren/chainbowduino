@@ -49,7 +49,7 @@ private:
     bool m_gotSerial;
 
     PacketHandler m_handler;
-    void transmit(int addr, int nbytes);
+    bool transmit(int addr, int nbytes);
 
     TwoWire m_master, m_slave;
 };

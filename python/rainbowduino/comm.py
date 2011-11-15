@@ -63,7 +63,8 @@ class SerialComm(object):
     '''
     def __init__(self, device = '/dev/ttyUSB0', baudrate = 9600):
         import serial
-        self.ser = serial.Serial(device,baudrate)
+        self.ser = serial.Serial(device,baudrate,timeout=1)
+        self.count = 0
         return
 
     def send(self, addr, data):
@@ -73,13 +74,27 @@ class SerialComm(object):
         "chr()" if you need to send a number.
         '''
         import time
-        tosend = [chr(addr), chr(len(data))] + data + [chr(0)]
-        print 'Send to %x %d cmd "%s"' % (addr,len(data),data[0])
+        if self.count == 255: 
+            self.count = 0
+        self.count += 1
+        tosend = [chr(addr), chr(self.count), chr(len(data))] + data + [chr(0)]
+        print 'Send to %x #%d %d cmd "%s"' % (addr,self.count,len(data),data[0])
         for char in tosend:
             self.ser.write(char)
-            time.sleep(0.002)
             continue
-        time.sleep(0.01)
+
+        reply = self.ser.read(3)
+        if len(reply) != 3:
+            print 'Packet %d FAILED: got only %d bytes' % (self.count, len(reply))
+            return
+
+        okno = reply[:2]
+        count = ord(reply[2])
+        if okno == 'NO' or count != self.count:
+            print 'Packet %d FAILED: got %s%d' % (self.count, okno, count)
+        else:
+            print 'Packet %d ok' % self.count
+
         return
 
     def pack_pixel(self, pixel):
