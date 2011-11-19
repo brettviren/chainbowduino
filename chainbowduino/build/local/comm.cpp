@@ -35,10 +35,10 @@ void Comm::init(int addr)
 {
     m_addr = addr;
 
-    if (addr) {
+    if (addr) {                 // slave
         Wire.begin(addr);
     }
-    else {
+    else {                      // master
         Wire.begin();
     }
 
@@ -51,8 +51,7 @@ byte Comm::addr()
 }
 
 // get next byte from serial stream
-byte serial_get(bool block = true);
-byte serial_get(bool block)
+byte Comm::serial_get(bool block)
 {
     if (block) {
         while (true) {
@@ -65,9 +64,8 @@ byte serial_get(bool block)
     return Serial.read();
 }
 
-byte wire_get(bool block = true);
-byte wire_get(bool block)
-{
+byte Comm::wire_get(bool block)
+{                               // slave
     if (block) {
         while (true) {
             if (Wire.available() > 0) {
@@ -79,10 +77,22 @@ byte wire_get(bool block)
     return Wire.receive();
 }
 
-void serial_drain()
+// Drain data from serial up to and including '\0'
+void Comm::serial_drain()
 {
     while (true) {
         byte val = serial_get();
+        if (val == '\0') {
+            break;
+        }
+    }
+}
+
+// Drain data from wire up to and including '\0'
+void Comm::wire_drain()
+{
+    while (true) {
+        byte val = wire_get();
         if (val == '\0') {
             break;
         }
@@ -107,14 +117,17 @@ bool Comm::drain(int nbytes)
     }
 }
 
-bool Comm::transmit(int addr, int nbytes)
-{
+bool Comm::transmit(byte addr, byte nbytes)
+{                               // master
     Wire.beginTransmission(addr);
+    // Wire.send(addr);
+    // Wire.send(nbytes);
     while (nbytes) {
         --nbytes;
         byte val = serial_get();
         Wire.send(val);
     }
+    Wire.send('\0');
     Wire.endTransmission();
     return true;
 }
@@ -122,10 +135,28 @@ bool Comm::transmit(int addr, int nbytes)
 
 void Comm::process()
 {
-    if (m_addr) {
+    if (m_addr) {               // slave
+        process_wire();
+    }
+    else {                      // master
+        process_serial();
+    }
+}
+
+void Comm::process_wire()
+{
+    byte val = wire_get();
+    if (val != m_addr) {
+        wire_drain();
         return;
     }
+    byte num = wire_get();
+    m_handler(num);
+    wire_drain();
+}
 
+void Comm::process_serial()
+{
     if (! Serial.available()) {
         return;
     }
@@ -135,17 +166,16 @@ void Comm::process()
     byte num = serial_get();
 
     bool okay = false;
-    if (addr == m_addr) {
+    if (!addr) {                // handle by master
         if (m_handler) {
-            m_handler(num);
+            okay = m_handler(num);
             serial_drain();
-            okay = true;
         }
         else {
             okay = drain(num);
         }
     }
-    else {
+    else {                      // send to slave
         okay = transmit(addr,num);
         serial_drain();
     }

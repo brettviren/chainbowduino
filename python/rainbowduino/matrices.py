@@ -50,6 +50,7 @@ class LedMatrix(object):
         for addr, ul, lr in self.matrices:
             if ul[0] <= pixel[0] <= lr[0] and ul[1] <= pixel[1] <= lr[1]:
                 trans = (pixel[0] - ul[0] , pixel[1] - ul[1] )
+                #print "addr:%s ul:%s lr:%s pixel:%s trans:%s" % (addr,ul,lr,pixel,trans)
                 return (addr,trans)
             continue
         return None

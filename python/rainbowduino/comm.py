@@ -78,7 +78,7 @@ class SerialComm(object):
             self.count = 0
         self.count += 1
         tosend = [chr(addr), chr(self.count), chr(len(data))] + data + [chr(0)]
-        print 'Send to 0x%x packet:%d len:%d cmd:"%s"' % (addr,self.count,len(data),data[0])
+        #print 'Send to 0x%x packet:%d len:%d cmd:"%s"' % (addr,self.count,len(data),data[0])
         for char in tosend:
             self.ser.write(char)
             continue
@@ -95,7 +95,7 @@ class SerialComm(object):
         if okno == 'NO' or pkt != self.count:
             print 'Packet %d FAILED: got %s%d (%d,%d)' % (self.count, okno, pkt, addr, nbytes)
         else:
-            print 'Packet %d %s%d (%d,%d)' % (self.count, okno, pkt, addr, nbytes)
+            #print 'Packet %d %s%d (%d,%d)' % (self.count, okno, pkt, addr, nbytes)
             pass
         rest = []
         while True:
@@ -106,7 +106,8 @@ class SerialComm(object):
             rest.append(num)
             continue
         if rest:
-            print rest
+            #print rest
+            pass
 
         #time.sleep(0.001)         # give the human a chance to see something, neh?
         return

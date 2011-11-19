@@ -63,7 +63,7 @@ def do_gradient():
     red_grad   = [15,11, 7, 3, 0, 0, 0,15]
     green_grad = [ 0, 3, 7,11, 7, 3, 0,15]
     blue_grad  = [ 0, 0, 0, 3, 7,11,15,15]
-    for col in range(8):
+    for col in range(8*3):
         for row,(r,g,b) in enumerate(zip(red_grad,green_grad,blue_grad)):
             leds.set_pixel((col,row), (r,g,b))
             continue
@@ -87,6 +87,7 @@ def do_show_addr():
     return
 
 
-do_show_addr()
-
+#do_show_addr()
+#do_flash()
+do_gradient()
 

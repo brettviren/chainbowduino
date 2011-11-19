@@ -31,7 +31,7 @@ public:
     void process();
 
     // Prototype for a packet handler function.  Return true if handled
-    typedef void (*PacketHandler)(int nbytes);
+    typedef bool (*PacketHandler)(int nbytes);
 
     // Set handler for when a packet is available
     void set_handler(PacketHandler handler);
@@ -45,11 +45,28 @@ public:
     // return the address
     byte addr();
 
+    // Get a byte from serial
+    byte serial_get(bool block = true);
+
+    // Get a byte from i2c
+    byte wire_get(bool block = true);
+
+    // Drain serial all data until and including '\0'
+    void serial_drain();
+
+    // Drain i2c all data until and including '\0'
+    void wire_drain();
+
 private:
     int m_addr;
 
     PacketHandler m_handler;
-    bool transmit(int addr, int nbytes);
+
+    // forward [addr][nbytes][payload] to the I2C bus
+    bool transmit(byte addr, byte nbytes);
+
+    void process_serial();
+    void process_wire();
 };
 
 #endif  // COMM_H

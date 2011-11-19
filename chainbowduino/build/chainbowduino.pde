@@ -21,7 +21,7 @@ unsigned short get_short()
     return (one << 8) | two;
 }
 
-void handle_packet(int nbytes)
+bool handle_packet(int nbytes)
 {
     unsigned char cmd = comm.read();
     
@@ -56,7 +56,7 @@ void handle_packet(int nbytes)
 
         // format: 0x0bgr
         color = get_short();
-        rainbow.lightOneDot(col,row,color,OTHERS_ON);
+        rainbow.lightOneDot(row,col,color,OTHERS_ON);
         break;
 
     case 'R':                   // Set one row
@@ -96,8 +96,50 @@ void handle_packet(int nbytes)
         break;
 
     default:
+        return false;
         break;
     }
+    return true;
+}
+
+void handle_i2c(int num)
+{
+    // byte addr = comm.read();
+    // byte count = comm.read();
+
+    unsigned char ascii = 0;
+
+    /*
+    rainbow.lightAll(WHITE);
+    rainbow.closeAll();
+
+    ascii = (unsigned char)(count + '0');
+    rainbow.dispChar(ascii, WHITE, 0);
+    delay(500);
+
+    rainbow.lightAll(WHITE);
+    rainbow.closeAll();
+    ascii = (unsigned char)(addr + '0');
+    rainbow.dispChar(ascii, WHITE, 0);
+    delay(500);
+    */
+
+    /*
+    if (addr != comm.addr() || count != num) {
+        comm.wire_drain();
+        return;
+    }
+    */
+
+    handle_packet(num);
+
+    /*
+    delay(500);
+    rainbow.lightAll(WHITE);
+    rainbow.closeAll();
+    ascii = (unsigned char)(addr + '0');
+    rainbow.dispChar(ascii, WHITE, 0);
+    */
 }
 
 void setup ()
@@ -105,6 +147,7 @@ void setup ()
     int addr = EEPROM.read(0);
     comm.init(addr);
     comm.set_handler(handle_packet);
+    Wire.onReceive(handle_i2c);
 
     rainbow.init();
     rainbow.lightAll(WHITE);
