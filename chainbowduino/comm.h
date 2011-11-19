@@ -1,5 +1,3 @@
-#include <Wire.h>
-
 /*
  * Packet communications through serial and I2C.
  *
@@ -33,7 +31,7 @@ public:
     void process();
 
     // Prototype for a packet handler function.  Return true if handled
-    typedef bool (*PacketHandler)(int nbytes);
+    typedef void (*PacketHandler)(int nbytes);
 
     // Set handler for when a packet is available
     void set_handler(PacketHandler handler);
@@ -44,14 +42,14 @@ public:
     // Drain nbytes from the stream
     bool drain(int nbytes);     // default handler
 
+    // return the address
+    byte addr();
+
 private:
     int m_addr;
-    bool m_gotSerial;
 
     PacketHandler m_handler;
     bool transmit(int addr, int nbytes);
-
-    TwoWire m_master, m_slave;
 };
 
 #endif  // COMM_H

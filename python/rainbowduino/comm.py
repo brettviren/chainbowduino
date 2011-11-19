@@ -61,7 +61,7 @@ class SerialComm(object):
     '''
     Match serial communication protocol of comm.cpp
     '''
-    def __init__(self, device = '/dev/ttyUSB0', baudrate = 9600):
+    def __init__(self, device = '/dev/ttyUSB0', baudrate = 115200):
         import serial
         self.ser = serial.Serial(device,baudrate,timeout=1)
         self.count = 0
@@ -78,23 +78,37 @@ class SerialComm(object):
             self.count = 0
         self.count += 1
         tosend = [chr(addr), chr(self.count), chr(len(data))] + data + [chr(0)]
-        print 'Send to %x #%d %d cmd "%s"' % (addr,self.count,len(data),data[0])
+        print 'Send to 0x%x packet:%d len:%d cmd:"%s"' % (addr,self.count,len(data),data[0])
         for char in tosend:
             self.ser.write(char)
             continue
 
-        reply = self.ser.read(3)
-        if len(reply) != 3:
+        reply = self.ser.read(5)
+        if len(reply) != 5:
             print 'Packet %d FAILED: got only %d bytes' % (self.count, len(reply))
             return
 
         okno = reply[:2]
-        count = ord(reply[2])
-        if okno == 'NO' or count != self.count:
-            print 'Packet %d FAILED: got %s%d' % (self.count, okno, count)
+        pkt = ord(reply[2])
+        addr = ord(reply[3])
+        nbytes = ord(reply[4])
+        if okno == 'NO' or pkt != self.count:
+            print 'Packet %d FAILED: got %s%d (%d,%d)' % (self.count, okno, pkt, addr, nbytes)
         else:
-            print 'Packet %d ok' % self.count
+            print 'Packet %d %s%d (%d,%d)' % (self.count, okno, pkt, addr, nbytes)
+            pass
+        rest = []
+        while True:
+            char = self.ser.read(1)
+            num = ord(char)
+            if not num:
+                break
+            rest.append(num)
+            continue
+        if rest:
+            print rest
 
+        #time.sleep(0.001)         # give the human a chance to see something, neh?
         return
 
     def pack_pixel(self, pixel):
@@ -171,4 +185,11 @@ class SerialComm(object):
         self.send(addr, data)
         return
 
-        
+    def set_show_addr(self,addr):
+        '''
+        Tell the matrix to display its address
+        '''
+        data = ['S']
+        self.send(addr,data)
+        return
+

@@ -13,6 +13,7 @@ int main(void)
 }
 
 void loop ();
+void handle_packet(int nbytes);
 void setup ();
 #line 1 "build/chainbowduino.pde"
 /* -*- c++ -*-
@@ -38,7 +39,7 @@ unsigned short get_short()
     return (one << 8) | two;
 }
 
-bool handle_packet(int nbytes)
+void handle_packet(int nbytes)
 {
     unsigned char cmd = comm.read();
     
@@ -49,6 +50,12 @@ bool handle_packet(int nbytes)
     unsigned char row, col, pixel, ascii;
 
     switch (cmd) {
+
+    case 'S':                   // Draw serial number
+        rainbow.closeAll();
+        ascii = (unsigned char)(comm.addr() + '0');
+        rainbow.dispChar(ascii, WHITE, 0);
+        break;
 
     case 'D':                   // Darken (clear) all LEDs
         rainbow.closeAll();
@@ -107,12 +114,9 @@ bool handle_packet(int nbytes)
         break;
 
     default:
-        return false;
         break;
     }
-    return true;
 }
-
 
 void setup ()
 {
@@ -122,6 +126,11 @@ void setup ()
 
     rainbow.init();
     rainbow.lightAll(WHITE);
+    rainbow.closeAll();
+
+    unsigned char ascii = (unsigned char)(comm.addr() + '0');
+    rainbow.dispChar(ascii, WHITE, 0);
+    
 }
 
 void loop ()

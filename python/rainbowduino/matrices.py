@@ -30,6 +30,16 @@ class LedMatrix(object):
         self.matrices.append((addr,ul,lr))
         return
 
+    def addresses(self):
+        '''
+        return a list of known addresses
+        '''
+        ret = []
+        for addr, ul, lr in self.matrices:
+            ret.append(addr)
+            continue
+        return ret
+
     def matrix_address(self,pixel):
         '''
         Return a tuple holding (addr,trans) where addr is the address
