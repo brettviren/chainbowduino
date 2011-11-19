@@ -1,10 +1,13 @@
-= Chainbowduino =
+Chainbowduino 
+=============
 
 This project provides firmware and host software for driving multiple
 [Rainbowduino](http://www.seeedstudio.com/depot/rainbowduino-led-driver-platform-atmega-328-p-371.html)
 (RBD) boards chained together.
 
-== Addressing ==
+
+Addressing
+----------
 
 Each RBD board has an address.  Address 0 is the master, the rest are
 slaves.  A small, unique firmware is initially flashed to each board.
@@ -12,7 +15,9 @@ In the setup() function the 0th byte of EEPROM is written with the
 uniqe address.  After this, the full, identical firmware is flashed to
 each board.
 
-== Communication ==
+
+Communication
+-------------
 
 Communication between the host computer and the master board is via
 UART.  Communication between the master board and any slaves it
@@ -33,7 +38,9 @@ UART/I2C converter.  Communication proceeds through several states:
 
 5. The system is idle until it is repeated.
 
-=== Protocol ===
+
+Protocol
+--------
 
 The communication protocol (implemented on the host side by comm.py
 and on the RBD side by comm.cpp) consists of command and response
@@ -68,7 +75,7 @@ The response packet consists of a:
 * terminating zero byte
 
 
-= Hardware =
+## Hardware
 
 My initial hardware consists of:
 
@@ -93,7 +100,8 @@ Some notes on hardware:
 
 * Take note some important differences between the [discontinued](http://www.seeedstudio.com/wiki/UartSBee) [UartSBee v3](http://www.seeedstudio.com/wiki/UartSBee_V3.1) and the current [V4](http://www.seeedstudio.com/wiki/UartSBee_V4).  The v3 boards will [plug right in](http://www.seeedstudio.com/wiki/Rainbowduino_LED_driver_platform_-_Atmega_328#Use_UartSB_to_Upload_firmware) to the header connector on the RBD board, however V4 changes the pin out to make this no longer work.  If you don't notice this you will get errors when trying to upload a sketch.  
 
-== Connecting ==
+
+### Connecting
 
 The RBDs chain end to end.  The I2C connection is made automatically
 by mating the pins to the socket.  You need to supply some connection
