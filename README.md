@@ -123,8 +123,7 @@ TXD and VCC keeping in mind RXD/TXD should cross over.
 ## Firmware
 
 I build and flash the firmware via scons and the SConstruct file from
-[arscons](http://code.google.com/p/arscons/) (thanks to freenode
-#arduino member gordonjcp for the suggestion).  It should build with
+[arscons](http://code.google.com/p/arscons/) (thanks to freenode #arduino member gordonjcp for the suggestion).  It should build with
 the usual Arduino IDE but this is far more convenient, particularly
 handling multiple flashes of multiple boards.
 
