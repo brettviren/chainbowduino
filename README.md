@@ -165,12 +165,12 @@ patched
 
 * libraries/Wire/Wire.h change to:
 
-    #define BUFFER_LENGTH 128
+    \#define BUFFER_LENGTH 128
 
 * libraries/Wire/utility/twi.h change to:
 
-    #define TWI_FREQ 400000L
-    #define TWI_BUFFER_LENGTH 128
+    \#define TWI_FREQ 400000L
+    \#define TWI_BUFFER_LENGTH 128
 
 The buffer length changes are required.  Without them bulk transfers
 of a full matrix will not transfer over I2C.  The TWI_FREQ change is
