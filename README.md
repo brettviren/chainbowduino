@@ -170,6 +170,7 @@ patched
 * libraries/Wire/utility/twi.h change to:
 
     \#define TWI_FREQ 400000L
+
     \#define TWI_BUFFER_LENGTH 128
 
 The buffer length changes are required.  Without them bulk transfers
