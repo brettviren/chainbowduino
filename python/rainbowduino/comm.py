@@ -77,8 +77,12 @@ class SerialComm(object):
         if self.count == 255: 
             self.count = 0
         self.count += 1
-        tosend = [chr(addr), chr(self.count), chr(len(data))] + data + [chr(0)]
-        #print 'Send to 0x%x packet:%d len:%d cmd:"%s"' % (addr,self.count,len(data),data[0])
+        #print len(data)
+        data_length = len(data)
+        assert 4 + data_length <= 128, "Data must be limited to 124 bytes."
+        tosend = [chr(addr), chr(self.count), chr(data_length)] + data + [chr(0)]
+        #print 'Send to 0x%x packet:%d len:%d cmd:"%s"' % (addr,self.count,data_length,data[0])
+        #print ['0x%x' % ord(x) for x in data[1:]]
         for char in tosend:
             self.ser.write(char)
             continue
@@ -120,10 +124,38 @@ class SerialComm(object):
 
     def pack_color(self, color):
         '''
-        Return color packed ready to send as a two element list [0x0b, 0xgr]
+        Return single color packed ready to send as a two element list [0x0b, 0xgr]
         '''
         r,g,b = color
         return [ chr(b&0xf) , chr(((g&0xf)<<4) | (r&0xf)) ]
+
+    def pack_colors(self, colors):
+        '''
+        Return a succession of colors packed ready to send.  This
+        packs two colors into three bytes. Note the RGB order is
+        preserved and not bgr.
+
+        [(r,g,b),(R,G,B)]-> [0xrg, 0xbR, 0xGB]
+
+        An odd number of colors results in the last nibble to be zero:
+
+        [(r,g,b)]-> [0xrg, 0xb0]
+        '''
+        ret = []
+        colors = list(colors)   # make a copy
+        odd = len(colors) % 2
+        if odd: colors.append((0,0,0))
+
+        while len(colors):
+            r,g,b = colors.pop(0)
+            R,G,B = colors.pop(0)
+            ret.append(chr( ((0xf&r) << 4) | (0xf&g) ) )
+            ret.append(chr( ((0xf&b) << 4) | (0xf&R) ) )
+            ret.append(chr( ((0xf&G) << 4) | (0xf&B) ) )
+            continue
+        if odd:
+            ret.pop()
+        return ret
 
     def set_pixel(self, addr, pixel, color):
         '''
@@ -137,8 +169,7 @@ class SerialComm(object):
         Set the given column of the matrix at the given address to the given color.
         '''
         data = ['C', chr(col)]
-        for color in colors:
-            data += self.pack_color(color)
+        data += self.pack_colors(colors)
         self.send(addr, data)
         return
 
@@ -147,8 +178,7 @@ class SerialComm(object):
         Set the given row of the matrix at the given address to the given color.
         '''
         data = ['R', chr(row)]
-        for color in colors:
-            data += self.pack_color(color)
+        data += self.pack_colors(colors)
         self.send(addr, data)
         return
         
@@ -171,9 +201,7 @@ class SerialComm(object):
         '''
         data = ['M']
         for row in matrix:
-            for color in row:
-                data += self.pack_color(color)
-                continue
+            data += self.pack_colors(row)
             continue
         self.send(addr, data)
         return

@@ -39,10 +39,10 @@ UART/I2C converter.  Communication proceeds through several states:
 
 ### Protocol
 
-The communication protocol (implemented on the host side by comm.py
-and on the RBD side by comm.cpp) consists of command and response
-packets terminated with a 0 byte.  Details of the protocol may change
-from what is documented below.  The source is always definitive.
+The communication protocol (implemented on the host side by comm.py)
+consists of command and response packets terminated with a 0 byte.
+Details of the protocol may change from what is documented below.  The
+source is always definitive.
 
 The UART command packet consists of a header and a command character
 and a command-specific payload.
@@ -59,9 +59,7 @@ and a command-specific payload.
 
 * terminating zero byte
 
-To see what commands exist check the chainbowduino.pde file.
-
-The UART response packet consists of a:
+See below for commands.  The UART response packet consists of a:
 
 * A two byte status "OK" or "NO"
 
@@ -75,6 +73,46 @@ The I2C protocol is essentially the same except that the packet number
 is not sent and the address and command length are not explicitly
 written but the remaining command items are.  There is no response
 packet.
+
+
+### Commands
+
+Here are the commands.  Check the main firmware file for the
+definitive list.  Some commands take color information.  There are two
+packing for colors:
+
+* single color (SC-packing) is two bytes packed in 0x0bgr.
+
+* multiple colors (MC-packing) are packed in 1.5 bytes in RGB order
+  and concatenated, eg rgb+RGB is [0xrg, 0xbR, 0xGB].
+
+'S'
+: Draw the address / serial number to the matrix.  No payload.
+
+'D'
+: Darken all LEDs. No payload
+
+'L'
+: Light all LEDs.  Payload is a single color in SC-packing.
+
+'P' : Light a single pixel.  Payload is one byte holding the
+column/row numbers packed like 0xCR followed by a color in SC-packing.
+
+'R'
+: Set a row of 8 colors.  Payload is one byte holding the row number
+followed by the 8 colors in MC-packing.
+
+'C'
+: Set a column of 8 colors.  Payload is one byte holding the column number
+followed by the 8 colors in MC-packing.
+
+'M' : Set the entire 8x8 matrix with 64 colors. Payload is the 64
+colors in MC-packing.  Row 0, columns 0-7 are first, followed by row
+1, etc.
+
+'A' : Display an ASCII character.  Payload is the ASCII encoded
+character, followed by a color in SC-payload followed by an offset.
+
 
 
 ## Hardware
@@ -122,6 +160,24 @@ TXD and VCC keeping in mind RXD/TXD should cross over.
 
 ## Firmware
 
+Before building the firmware, the Arduino libraries needs to be
+patched
+
+* libraries/Wire/Wire.h change to:
+
+    #define BUFFER_LENGTH 128
+
+* libraries/Wire/utility/twi.h change to:
+
+    #define TWI_FREQ 400000L
+    #define TWI_BUFFER_LENGTH 128
+
+The buffer length changes are required.  Without them bulk transfers
+of a full matrix will not transfer over I2C.  The TWI_FREQ change is
+optional but it gains about an extra frame per second for the random
+matrix test with one master and two slaves (18 FPS for m+2s.  84 FPS
+for master alone).
+
 I build and flash the firmware via scons and the SConstruct file from
 [arscons](http://code.google.com/p/arscons/) (thanks to freenode #arduino member gordonjcp for the suggestion).  It should build with
 the usual Arduino IDE but this is far more convenient, particularly
@@ -156,6 +212,7 @@ for up to three boards are included.
     cd two
     scons ARDUINO_HOME=$ARDUINO_HOME upload
     cd -
+
 
 ## Others
 

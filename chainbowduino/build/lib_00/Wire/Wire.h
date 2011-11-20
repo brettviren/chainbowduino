@@ -22,7 +22,9 @@
 
 #include <inttypes.h>
 
-#define BUFFER_LENGTH 32
+//#define BUFFER_LENGTH 32
+// make same as serial - must match utility/twi.h
+#define BUFFER_LENGTH 128
 
 class TwoWire
 {

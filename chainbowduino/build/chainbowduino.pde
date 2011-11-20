@@ -16,10 +16,41 @@ Rainbow rainbow = Rainbow();
 // color is packed into a 2byte short: 0x0bgr
 unsigned short get_short()
 {
-    byte one = comm.read();
-    byte two = comm.read();
-    return (one << 8) | two;
+    byte b1 = comm.read();
+    byte b2 = comm.read();
+    return (b1 << 8) | b2;
 }
+
+// read and unpack three bytes assuming [0xrg, 0xbR, 0xGB] 
+// and repack them into two shorts like [0x0bgr, 0x0BGR]
+void get_two(unsigned short *two)
+{
+    byte b1 = comm.read();
+    byte b2 = comm.read();
+    byte b3 = comm.read();
+    
+    byte r = 0xf&(b1 >> 4);
+    byte g = 0xf&(b1);
+    byte b = 0xf&(b2 >> 4);
+    byte R = 0xf&(b2);
+    byte G = 0xf&(b3 >> 4);
+    byte B = 0xf&(b3);
+
+    two[0] = (b<<8) | (g<<4) | r;
+    two[1] = (B<<8) | (G<<4) | R;
+}
+
+void get_eight(unsigned short *eight)
+{
+    for (int count = 0; count < 8; ++count) {
+        eight[count] = 0;
+    }
+    for (int count = 0; count < 4; ++count) {
+        get_two(eight+count*2);
+    }
+}
+
+
 
 bool handle_packet(int nbytes)
 {
@@ -60,28 +91,25 @@ bool handle_packet(int nbytes)
         break;
 
     case 'R':                   // Set one row
-        // format: 0x0R (row number) 0x0bgr * 8 (8 shorts of colors)
+        // format: 0x0R (row number) 0xrg 0xbR 0xGB * 4
         row = comm.read();
-        for (int ind=0; ind<8; ++ind) {
-            eight[ind] = get_short();
-        }
+        get_eight(eight);
         rainbow.lightOneLine(row,eight,OTHERS_ON);
         break;
 
     case 'C':                   // Set one column
         // format: 0x0C (column number) 0x0bgr * 8 (8 shorts of colors)
         col = comm.read();
-        for (int ind=0; ind<8; ++ind) {
-            eight[ind] = get_short();
-        }
+        get_eight(eight);
         rainbow.lightOneColumn(col,eight,OTHERS_ON);
         break;
 
     case 'M':                   // Set whole matrix
-        // format: 64 shorts of color, row1's 8 columns first, row8's last
+        // row1's 8 columns first, row8's last
         for (int irow = 0; irow < 8; ++irow) {
+            get_eight(eight);
             for (int icol = 0; icol < 8; ++icol) {
-                matrix[irow][icol] = get_short();
+                matrix[irow][icol] = eight[icol];
             }
         }
         rainbow.lightAll(matrix);

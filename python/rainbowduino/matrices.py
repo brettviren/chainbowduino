@@ -85,3 +85,4 @@ class LedMatrix(object):
             self.comm.set_all(addr,color)
             continue
         return
+
